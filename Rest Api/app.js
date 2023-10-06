@@ -1,7 +1,17 @@
 const express = require('express');
+const fs = require('fs');
 const port = 3000;
 const app = express();
 const users = require('./MOCK_DATA.json');
+
+//Middleware : whenever form data comes urlencoded helps in putting that to the body
+app.use(express.urlencoded({ extended: false})); 
+
+app.use((req, res, next) => {
+    fs.appendFile("log.txt", `\n${Date.now()}: ${req.method}: ${req.path}\n`, (err, data) =>{
+        next();
+    });
+});
 
 //ROUTES
 app.get('/users', (req, res) => {
@@ -19,7 +29,12 @@ app.get('/api/users',(req, res) => {
 
 app.post('/api/users', (req, res) => {
     //TODO: Create new USer
-    return res.json({ status: "pending"});
+    const body = req.body;
+    users.push({...body, id: users.length + 1});
+    fs.writeFile('./MOCK_DATA.json', JSON.stringify(users), (err, data) => {
+        return res.json({ status: "Success", id: users.length });
+    })
+    
 });
 
 app.route('/api/users/:id')
